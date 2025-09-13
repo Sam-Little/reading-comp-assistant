@@ -1,0 +1,5 @@
+streamlit>=1.33
+spacy>=3.7
+nltk>=3.8
+rapidfuzz>=3.9
+pandas>=2.1

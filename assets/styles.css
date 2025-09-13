@@ -1,0 +1,30 @@
+
+### `assets/styles.css`
+```css
+.feedback-correct {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+.feedback-wrong {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+.evidence {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+.highlight {
+  background: #fff59d;
+  border-radius: 3px;
+  padding: 0 2px;
+}
