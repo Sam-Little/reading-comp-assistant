@@ -3,3 +3,4 @@ spacy>=3.7
 nltk>=3.8
 rapidfuzz>=3.9
 pandas>=2.1
+openai>=1.10.0
