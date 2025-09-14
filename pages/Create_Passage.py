@@ -1,7 +1,7 @@
 # pages/2_Create_Passage.py
 import os
 import streamlit as st
-from rca.openai_client import generate_passage
+from rca.gemini_client import generate_passage
 
 st.set_page_config(page_title="Create Passage", page_icon="📝", layout="wide")
 

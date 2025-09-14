@@ -4,6 +4,8 @@ import streamlit as st
 from rca.qg import generate_questions
 from rca.grading import grade_mcq, grade_short_answer
 from rca.utils import highlight_span
+from rca.emailer import send_email
+from rca.report import build_text_report, build_html_report
 
 st.set_page_config(page_title="Reading Comprehension", page_icon="🧠", layout="wide")
 
@@ -14,33 +16,8 @@ try:
 except Exception:
     pass
 
-# Top nav bar
-st.markdown("""
-<div class="topnav">
-  <div class="nav-left">
-    <a class="brand" href="/">RCA</a>
-  </div>
-  <div class="nav-right">
-    <a class="navlink" href="/">Home</a>
-    <a class="navlink active" href="/?page=reading">Reading Comp</a>
-    <a class="navlink" href="/?page=create">Create Passage</a>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
 st.title("🧠 Reading Comprehension")
-st.caption("Paste a short passage, generate questions, and get instant feedback with evidence.")
-
-with st.expander("How it works"):
-    st.markdown(
-        """
-- **Cloze**: removes a key word from a sentence.
-- **WH/MCQ**: hides a named entity (Who/Where/When/Org).
-- For each answer, you’ll get **✓/✗** and we’ll show the **evidence sentence**.
-
-> Tip: Keep passages under ~400 words for best results.
-"""
-    )
+st.caption("Paste a passage, generate questions, and get instant feedback.")
 
 col_left, col_right = st.columns([2, 1])
 
@@ -123,3 +100,39 @@ if st.session_state.questions:
             if res["is_correct"]:
                 correct += 1
         st.success(f"Score: {correct} / {total}")
+
+    # New email block
+    st.divider()
+    st.subheader("📧 Send Results to Teacher")
+
+    colA, colB = st.columns([1, 1])
+    with colA:
+        student_name = st.text_input("Student name (optional)", placeholder="e.g., Alex Kim")
+    with colB:
+        teacher_email = st.text_input("Teacher's email", placeholder="teacher@example.com")
+
+    if st.button("Send Results", type="primary"):
+        if not teacher_email or "@" not in teacher_email:
+            st.error("Please enter a valid teacher email.")
+        else:
+            passage_text = text or ""
+            text_report = build_text_report(passage_text, st.session_state.questions, st.session_state.answers, student_name=student_name)
+            html_report = build_html_report(passage_text, st.session_state.questions, st.session_state.answers, student_name=student_name)
+
+            subject = "Reading Comprehension – Quiz Report"
+            if student_name:
+                subject += f" ({student_name})"
+
+            with st.spinner("Sending email..."):
+                status = send_email(
+                    to_email=teacher_email,
+                    subject=subject,
+                    body_text=text_report,
+                    body_html=html_report
+                )
+
+            if status == "OK":
+                st.success(f"Sent to {teacher_email}")
+            else:
+                st.error(status)
+                st.info("Tip: Set SMTP_USER and SMTP_PASS (App Password) in your environment.")
