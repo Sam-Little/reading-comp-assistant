@@ -1,7 +1,7 @@
-# rca/openai_client.py (secure)
 import os, traceback
 from typing import Optional
-from openai import OpenAI
+import streamlit as st
+import google.generativeai as genai
 
 SYSTEM_PROMPT = """You are a helpful assistant that writes reading passages for primary school students.
 Write a single coherent passage that:
@@ -29,23 +29,21 @@ Keywords: {keywords or "None"}.
 Learning outcomes to support: {learning_outcomes or "None"}.
 Tone: engaging but age-appropriate. Avoid brand names. Keep it coherent and self-contained.
 """
+    
+    # Use st.secrets to securely access the Gemini API key
+    api_key = st.secrets.get("GOOGLE_API_KEY")
 
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
-        return "(Local fallback: no OPENAI_API_KEY set. Set it in your shell or Streamlit Secrets.)"
+        return "(Local fallback: no GOOGLE_API_KEY set. Set it in your shell or Streamlit Secrets.)"
 
     try:
-        client = OpenAI(api_key=api_key)
-        model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        resp = client.chat.completions.create(
-            model=model_name,
-            temperature=0.7,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt.strip()}
-            ],
-            timeout=30
-        )
-        return resp.choices[0].message.content.strip()
+        # Configure the Google API client
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=SYSTEM_PROMPT)
+
+        resp = model.generate_content(user_prompt.strip(),
+                                      generation_config=genai.GenerationConfig(temperature=0.7))
+        
+        return resp.text.strip()
     except Exception as e:
         return f"(Local fallback due to error)\nError: {e}\n\n{traceback.format_exc()}"
