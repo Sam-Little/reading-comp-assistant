@@ -1,62 +1,66 @@
 import streamlit as st
 
-# --- Mock User Database ---
-# This dictionary acts as the temporary user database for the MVP.
+# --- User Database ---
+# This is mock data. In a real app, this would be in a secure database.
 USER_CREDENTIALS = {
-    "teacher_sam": {"password": "sam_pass", "role": "Teacher"},
-    "teacher_filip": {"password": "filip_pass", "role": "Teacher"},
-    "student_test1": {"password": "student1", "role": "Student"},
-    "student_test2": {"password": "student2", "role": "Student"}
+    "teacher_sam": {
+        "password": "securepass",
+        "role": "Teacher",
+        "name": "Sam (Teacher)"
+    },
+    "student_test1": {
+        "password": "securepass",
+        "role": "Student",
+        "name": "Test Student 1"
+    },
+    "student_test2": {
+        "password": "securepass",
+        "role": "Student",
+        "name": "Test Student 2"
+    }
 }
 
-# --- Session State Initialization ---
-def init_session_state():
-    """Initializes session state variables if they don't exist."""
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-    if 'username' not in st.session_state:
-        st.session_state.username = None
-    if 'role' not in st.session_state:
-        st.session_state.role = None
-    if 'auth_error' not in st.session_state:
-        st.session_state.auth_error = False
+# --- Session State Management ---
 
-# --- Core Authentication Logic ---
+def init_session_state():
+    """Initializes all required session state variables."""
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "username" not in st.session_state:
+        st.session_state.username = None
+    if "role" not in st.session_state:
+        st.session_state.role = None
+    if "auth_error" not in st.session_state:
+        st.session_state.auth_error = False
+    
+    # This tracks which sub-page the teacher is on.
+    if "teacher_view" not in st.session_state:
+        # --- FIX: ADDED THE MISSING INDENTED BLOCK ---
+        st.session_state.teacher_view = "dashboard"
+
+# --- Core Authentication Functions ---
+
 def check_credentials(username, password):
-    """Checks the provided credentials against the mock database."""
-    if username in USER_CREDENTIALS:
-        user_data = USER_CREDENTIALS[username]
-        if password == user_data["password"]:
-            st.session_state.logged_in = True
-            st.session_state.username = username
-            st.session_state.role = user_data["role"]
-            st.session_state.auth_error = False
-            return True
-    st.session_state.auth_error = True
-    return False
+    """
+    Checks if the username and password are valid.
+    Returns the cleaned username on success, False on failure.
+    """
+    
+    # Strip whitespace to prevent login failures from typos
+    clean_username = username.strip() 
+    
+    if clean_username in USER_CREDENTIALS:
+        if USER_CREDENTIALS[clean_username]["password"] == password:
+            # --- FIX: Returns the username string, NOT True ---
+            return clean_username  
+    return False # Return False if any check fails
 
 def logout():
-    """Resets the session state for logout."""
+    """Logs the user out and resets session state."""
     st.session_state.logged_in = False
     st.session_state.username = None
     st.session_state.role = None
     st.session_state.auth_error = False
-
-def login_form():
-    """Displays the login form."""
-    if st.session_state.auth_error:
-         st.session_state.auth_error = False
-
-    with st.form("login_form"):
-        st.subheader("RCA Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Log In")
-
-        if submitted:
-            if check_credentials(username, password):
-                st.success(f"Welcome, {st.session_state.role}!")
-                st.experimental_rerun()
-            else:
-                st.session_state.auth_error = True
-                st.experimental_rerun()
+    
+    # Reset the teacher view on logout
+    st.session_state.teacher_view = "dashboard"
