@@ -22,7 +22,12 @@ def build_quiz_pdf(passage: str, questions: list) -> io.BytesIO:
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
     story = []
-
+    
+    # ---------------- HEADER ---------------- #
+    # Student Name Area
+    story.append(Paragraph("<b>Name:</b> ____________________________________________", styles["Normal"]))
+    story.append(Spacer(1, 0.3 * inch))
+    
     # Title
     story.append(Paragraph("<b>Reading Comprehension Quiz</b>", styles["Title"]))
     story.append(Spacer(1, 0.3 * inch))
@@ -36,7 +41,19 @@ def build_quiz_pdf(passage: str, questions: list) -> io.BytesIO:
     # Questions
     story.append(Paragraph("<b>Questions</b>", styles["Heading2"]))
     story.append(Spacer(1, 0.2 * inch))
+    # ---------------- DRAW LINES CALLBACK ---------------- #
+    def draw_answer_lines(canvas, doc):
+        left = 72  # 1 inch margin
+        right = doc.width + doc.leftMargin
+        line_gap = 18  # vertical spacing between lines
 
+        for _ in questions:  # for each question, 3 lines
+            y = canvas._curr_y - 6
+            for __ in range(3):
+                canvas.line(left, y, right, y)
+                y -= line_gap
+            canvas._curr_y = y - 12
+            
     for i, q in enumerate(questions):
         prompt = q.get("prompt", "").strip()
 
